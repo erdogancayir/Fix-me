@@ -1,64 +1,26 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trading Simülasyon Sistemi</title>
-    <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; }
-        code { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; }
-    </style>
-</head>
-<body>
-    <h1>Trading Simülasyon Sistemi</h1>
-    <p>FIX protokolü ile yüksek performanslı, non-blocking bir trading simülasyonu.</p>
-    
-    <h2>Proje Genel Bakış</h2>
-    <p>Bu proje elektronik trading sistemlerini simüle eder ve aşağıdaki bileşenleri içerir:</p>
-    <ul>
-        <li><strong>Piyasa (Market):</strong> Alım/satım emirlerini işler.</li>
-        <li><strong>Broker:</strong> Emirleri Router üzerinden piyasaya iletir.</li>
-        <li><strong>Router:</strong> Broker ve Market bileşenleri arasındaki mesaj trafiğini yönlendirir.</li>
-    </ul>
-    
-    <h2>Teknik Yapı</h2>
-    <ul>
-        <li><strong>Java NIO</strong> - Non-blocking soketler için <code>Selector</code> ve <code>SocketChannel</code>.</li>
-        <li><strong>ExecutorService</strong> - Mesaj işleme için çoklu iş parçacığı yönetimi.</li>
-        <li><strong>Maven</strong> - Multi-module proje yapısı.</li>
-        <li><strong>FIX Protokolü</strong> - Standart finansal mesaj formatı.</li>
-    </ul>
-    
-    <h2>Hangi Yöntemi Kullanmalıyız?</h2>
-    <p><strong>Selector + ExecutorService</strong> en iyi tercihtir çünkü:</p>
-    <ul>
-        <li>FIX mesajları düşük gecikme ile işlenmeli ve tek bir thread tüm bağlantıları yönetebilir.</li>
-        <li>Java'nın <code>Selector</code> API'si çok sayıda bağlantıyı aynı anda yönetmek için optimize edilmiştir.</li>
-        <li>AsynchronousSocketChannel, az bağlantı gerektiren sistemler için iyidir; ancak burada binlerce bağlantıyı yönetmek gerektiği için Selector daha iyi bir tercihtir.</li>
-    </ul>
-    
-    <h2>Nasıl Derlenir?</h2>
-    <pre><code>mvn clean package</code></pre>
-    <p>Bu işlem her bileşen için çalıştırılabilir JAR dosyaları üretir.</p>
-    
-    <h2>Nasıl Çalıştırılır?</h2>
-    <p>Router'ı başlat:</p>
-    <pre><code>java -jar router.jar</code></pre>
-    <p>Broker'ı başlat:</p>
-    <pre><code>java -jar broker.jar</code></pre>
-    <p>Piyasayı başlat:</p>
-    <pre><code>java -jar market.jar</code></pre>
-    
-    <h2>Mimari</h2>
-    <p>Mesajlar non-blocking soketler üzerinden yönlendirilir ve Chain-of-Responsibility deseni kullanılır.</p>
-    
-    <h2>Mesaj Formatı</h2>
-    <p>Tüm mesajlar FIX formatında olup, aşağıdaki zorunlu alanlara sahiptir:</p>
-    <pre><code>
-BrokerID|EmirTürü|Enstrüman|Miktar|Piyasa|Fiyat|Checksum
-    </code></pre>
-    
-    <h2>Lisans</h2>
-    <p>MIT Lisansı</p>
-</body>
-</html>
+AsynchronousSocketChannel mı yoksa Selector & Executor mu?
+Senin proje gereksinimlerine bakarsak:
+
+Non-blocking socket kullanımı zorunlu.
+Java Executor Framework kullanılmalı (thread yönetimi için).
+Performans kritik (yüksek hızlı mesaj işleme gereksinimi var).
+Seçeneklerin karşılaştırılması
+Özellik	AsynchronousSocketChannel	Selector & Executor (NIO)
+Kod karmaşıklığı	Daha basit, çünkü Java'nın CompletableFuture ve CompletionHandler API'leri ile doğal async programlama yapabiliyorsun.	Daha karmaşık, çünkü Selector ile olay bazlı bir yapı kurmak gerekiyor.
+Performans (Düşük Latency)	Daha iyi ölçeklenebilirlik sağlar, ancak çok yoğun I/O trafiğinde thread per connection modeli nedeniyle CPU tıkanabilir.	Selector ile çalışırken tek thread tüm bağlantıları yönetir. Büyük ölçekli sistemlerde daha performanslı olabilir.
+Thread Yönetimi	Java'nın AsynchronousChannelGroup ile yönetilebilir, ancak thread pool boyutu iyi ayarlanmazsa darboğaz yaratabilir.	ExecutorService kullanımı ile esnek thread yönetimi sağlanabilir.
+Uygulama için uygunluk	FIX protokolü gibi mesaj trafiği yoğun olan uygulamalarda genellikle kullanılmaz.	Finansal işlemler, FIX Router gibi uygulamalar için en iyi yöntemdir.
+Bu projede hangi yöntem seçilmeli?
+Selector + ExecutorService daha uygun! Çünkü:
+
+FIX mesajları düşük gecikme ile işlenmeli ve tek bir thread tüm bağlantıları yönetebilir.
+Java'nın Selector API'si ile çok sayıda bağlantıyı aynı anda yönetebilirsin.
+AsynchronousSocketChannel, genellikle daha az bağlantı ve daha karmaşık async işlem gerektiren yerlerde kullanılır. Ancak burada router binlerce bağlantıyı verimli yönetmeli, bu yüzden Selector daha iyi bir tercih olur.
+Ne yapılmalı?
+Mevcut broker kodun iyi bir başlangıç çünkü Selector kullanıyor.
+Router bileşeni de Selector kullanmalı ve tüm broker ve market bağlantılarını tek bir event loop içinde yönetmeli.
+ExecutorService mesaj işleme için kullanılmalı, ancak I/O işlemleri Selector tarafından yönetilmeli.
+Sonuç
+Selector & ExecutorService en iyi seçim!
+AsynchronousSocketChannel finansal trading sistemleri için uygun değil, çünkü FIX gibi uygulamalar düşük latency ve yüksek throughput için optimize edilmeli.
+Bu yüzden Selector ve Executor tabanlı bir router mimarisi kurmalısın.
