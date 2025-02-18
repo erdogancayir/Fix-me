@@ -11,6 +11,31 @@ All components communicate using **non-blocking sockets (Java NIO)**, ensuring a
 
 ---
 
+## 🎯 Why Build This Project?
+Developing such a system helps simulate real-world financial trading, allowing developers to:
+- Understand the **core mechanisms of electronic trading**.
+- Gain hands-on experience with **high-frequency trading architectures**.
+- Work with **low-latency, event-driven systems**.
+- Implement **multi-threaded network applications** with **asynchronous communication**.
+
+This project serves as a foundation for developing robust financial applications that require **secure, high-speed data transmission**.
+
+---
+
+## ❓ What is FIX Protocol?
+The **Financial Information eXchange (FIX)** protocol is a **global standard for electronic trading communication**. It is widely used by financial institutions, stock exchanges, and trading firms.
+
+### 📜 Key Features of FIX:
+- **Standardized format** for financial message exchange.
+- **Low-latency & high-performance** messaging.
+- **Ensures integrity** via message validation (checksum, sequencing, etc.).
+- **Used in equities, derivatives, FX, and more.**
+
+### 🔧 How FIX is Used Here:
+Our trading system follows a simplified **FIX protocol** to structure messages sent between **Brokers, Router, and Market**. This ensures reliable and structured trade execution.
+
+---
+
 ## 🚀 Technologies Used
 - **Java 17+** (Latest LTS version)
 - **Java NIO (Non-blocking Sockets)**
@@ -104,6 +129,13 @@ java -jar broker/target/broker.jar
 - ✅ **Database Integration**: Store transaction logs.
 - ✅ **Fail-over Mechanism**: Restore transactions if a component crashes.
 - ✅ **Graphical Dashboard**: Visualize trade execution statistics.
+
+---
+
+
+## 📩 Contact
+- 📧 Email: erdogancayir02@gmail.com
+- 🐙 GitHub: [erdogancayir](https://github.com/erdogancayir)
 
 ---
 
