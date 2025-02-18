@@ -51,6 +51,8 @@ Our trading system follows a simplified **FIX (Financial Information eXchange) p
 **Message Format:**
 ```
 <ID>|<OrderType>|<Instrument>|<Quantity>|<Market>|<Price>|<Checksum>
+
+123456|BUY|AAPL(Apple)|100|NASDAQ|150.25|45
 ```
 - `ID` → Assigned by Router
 - `OrderType` → BUY / SELL
