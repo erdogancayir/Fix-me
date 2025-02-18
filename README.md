@@ -1,64 +1,91 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trading Simülasyon Sistemi</title>
+    <title>AsynchronousSocketChannel mı yoksa Selector & Executor mu?</title>
     <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; }
-        code { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; }
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
-    <h1>Trading Simülasyon Sistemi</h1>
-    <p>FIX protokolü ile yüksek performanslı, non-blocking bir trading simülasyonu.</p>
-    
-    <h2>Proje Genel Bakış</h2>
-    <p>Bu proje elektronik trading sistemlerini simüle eder ve aşağıdaki bileşenleri içerir:</p>
+    <h1>AsynchronousSocketChannel mı yoksa Selector & Executor mu?</h1>
+    <p><strong>Senin proje gereksinimlerine bakarsak:</strong></p>
     <ul>
-        <li><strong>Piyasa (Market):</strong> Alım/satım emirlerini işler.</li>
-        <li><strong>Broker:</strong> Emirleri Router üzerinden piyasaya iletir.</li>
-        <li><strong>Router:</strong> Broker ve Market bileşenleri arasındaki mesaj trafiğini yönlendirir.</li>
+        <li>Non-blocking socket kullanımı zorunlu.</li>
+        <li>Java <code>Executor Framework</code> kullanılmalı (thread yönetimi için).</li>
+        <li>Performans kritik (yüksek hızlı mesaj işleme gereksinimi var).</li>
     </ul>
     
-    <h2>Teknik Yapı</h2>
-    <ul>
-        <li><strong>Java NIO</strong> - Non-blocking soketler için <code>Selector</code> ve <code>SocketChannel</code>.</li>
-        <li><strong>ExecutorService</strong> - Mesaj işleme için çoklu iş parçacığı yönetimi.</li>
-        <li><strong>Maven</strong> - Multi-module proje yapısı.</li>
-        <li><strong>FIX Protokolü</strong> - Standart finansal mesaj formatı.</li>
-    </ul>
+    <h2>Seçeneklerin karşılaştırılması</h2>
+    <table>
+        <tr>
+            <th>Özellik</th>
+            <th>AsynchronousSocketChannel</th>
+            <th>Selector & Executor (NIO)</th>
+        </tr>
+        <tr>
+            <td><strong>Kod karmaşıklığı</strong></td>
+            <td>Daha basit, çünkü Java'nın <code>CompletableFuture</code> ve <code>CompletionHandler</code> API'leri ile doğal async programlama yapabiliyorsun.</td>
+            <td>Daha karmaşık, çünkü <code>Selector</code> ile olay bazlı bir yapı kurmak gerekiyor.</td>
+        </tr>
+        <tr>
+            <td><strong>Performans (Düşük Latency)</strong></td>
+            <td>Daha iyi ölçeklenebilirlik sağlar, ancak çok yoğun I/O trafiğinde thread per connection modeli nedeniyle CPU tıkanabilir.</td>
+            <td><code>Selector</code> ile çalışırken tek thread tüm bağlantıları yönetir. Büyük ölçekli sistemlerde daha performanslı olabilir.</td>
+        </tr>
+        <tr>
+            <td><strong>Thread Yönetimi</strong></td>
+            <td>Java'nın <code>AsynchronousChannelGroup</code> ile yönetilebilir, ancak thread pool boyutu iyi ayarlanmazsa darboğaz yaratabilir.</td>
+            <td><code>ExecutorService</code> kullanımı ile esnek thread yönetimi sağlanabilir.</td>
+        </tr>
+        <tr>
+            <td><strong>Uygulama için uygunluk</strong></td>
+            <td>FIX protokolü gibi mesaj trafiği yoğun olan uygulamalarda genellikle kullanılmaz.</td>
+            <td>Finansal işlemler, FIX Router gibi uygulamalar için en iyi yöntemdir.</td>
+        </tr>
+    </table>
     
-    <h2>Hangi Yöntemi Kullanmalıyız?</h2>
-    <p><strong>Selector + ExecutorService</strong> en iyi tercihtir çünkü:</p>
+    <h2>Bu projede hangi yöntem seçilmeli?</h2>
+    <p><strong>Selector + ExecutorService daha uygun!</strong> Çünkü:</p>
     <ul>
         <li>FIX mesajları düşük gecikme ile işlenmeli ve tek bir thread tüm bağlantıları yönetebilir.</li>
-        <li>Java'nın <code>Selector</code> API'si çok sayıda bağlantıyı aynı anda yönetmek için optimize edilmiştir.</li>
-        <li>AsynchronousSocketChannel, az bağlantı gerektiren sistemler için iyidir; ancak burada binlerce bağlantıyı yönetmek gerektiği için Selector daha iyi bir tercihtir.</li>
+        <li>Java'nın <code>Selector</code> API'si ile çok sayıda bağlantıyı aynı anda yönetebilirsin.</li>
+        <li><code>AsynchronousSocketChannel</code>, genellikle daha az bağlantı ve daha karmaşık async işlem gerektiren yerlerde kullanılır. Ancak burada router binlerce bağlantıyı verimli yönetmeli, bu yüzden <code>Selector</code> daha iyi bir tercih olur.</li>
     </ul>
     
-    <h2>Nasıl Derlenir?</h2>
-    <pre><code>mvn clean package</code></pre>
-    <p>Bu işlem her bileşen için çalıştırılabilir JAR dosyaları üretir.</p>
+    <h2>Ne yapılmalı?</h2>
+    <ul>
+        <li>Mevcut broker kodun iyi bir başlangıç çünkü <code>Selector</code> kullanıyor.</li>
+        <li>Router bileşeni de <code>Selector</code> kullanmalı ve tüm broker ve market bağlantılarını tek bir event loop içinde yönetmeli.</li>
+        <li><code>ExecutorService</code> mesaj işleme için kullanılmalı, ancak I/O işlemleri <code>Selector</code> tarafından yönetilmeli.</li>
+    </ul>
     
-    <h2>Nasıl Çalıştırılır?</h2>
-    <p>Router'ı başlat:</p>
-    <pre><code>java -jar router.jar</code></pre>
-    <p>Broker'ı başlat:</p>
-    <pre><code>java -jar broker.jar</code></pre>
-    <p>Piyasayı başlat:</p>
-    <pre><code>java -jar market.jar</code></pre>
-    
-    <h2>Mimari</h2>
-    <p>Mesajlar non-blocking soketler üzerinden yönlendirilir ve Chain-of-Responsibility deseni kullanılır.</p>
-    
-    <h2>Mesaj Formatı</h2>
-    <p>Tüm mesajlar FIX formatında olup, aşağıdaki zorunlu alanlara sahiptir:</p>
-    <pre><code>
-BrokerID|EmirTürü|Enstrüman|Miktar|Piyasa|Fiyat|Checksum
-    </code></pre>
-    
-    <h2>Lisans</h2>
-    <p>MIT Lisansı</p>
+    <h2>Sonuç</h2>
+    <p><strong>Selector & ExecutorService en iyi seçim!</strong></p>
+    <p><code>AsynchronousSocketChannel</code> finansal trading sistemleri için uygun değil, çünkü FIX gibi uygulamalar düşük latency ve yüksek throughput için optimize edilmeli.</p>
+    <p>Bu yüzden <code>Selector</code> ve <code>Executor</code> tabanlı bir router mimarisi kurmalısın.</p>
 </body>
 </html>
