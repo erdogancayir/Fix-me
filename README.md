@@ -1,34 +1,3 @@
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>AsynchronousSocketChannel mı yoksa Selector & Executor mu?</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-        }
-        table, th, td {
-            border: 1px solid black;
-        }
-        th, td {
-            padding: 10px;
-            text-align: left;
-        }
-        th {
-            background-color: #f4f4f4;
-        }
-        code {
-            background-color: #f4f4f4;
-            padding: 2px 4px;
-            border-radius: 4px;
-        }
-    </style>
-</head>
 <body>
     <h1>AsynchronousSocketChannel mı yoksa Selector & Executor mu?</h1>
     <p><strong>Senin proje gereksinimlerine bakarsak:</strong></p>
