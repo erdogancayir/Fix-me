@@ -13,16 +13,17 @@ public class RouterSocketManager {
 
     private final Map<Integer, SocketChannel> brokerConnections = new ConcurrentHashMap<>();
     private final Map<Integer, SocketChannel> marketConnections = new ConcurrentHashMap<>();
-    private final Selector selector;
+    private Selector selector;
     private final Router router;
     private volatile boolean running = true;
 
-    public RouterSocketManager(Router router) throws IOException {
+    public RouterSocketManager(Router router){
         this.router = router;
-        this.selector = Selector.open();
     }
 
     public void startServers() throws IOException {
+        this.selector = Selector.open();
+
         startServer(BROKER_PORT, brokerConnections, "Broker");
         startServer(MARKET_PORT, marketConnections, "Market");
 
@@ -71,6 +72,9 @@ public class RouterSocketManager {
 
             String type = (String) key.attachment();
             int id = Objects.hash(clientChannel);  // Daha güvenli ID ataması
+            if (id % 2 != 0) {
+                id++;
+            }
 
             if (serverChannel.socket().getLocalPort() == BROKER_PORT) {
                 brokerConnections.put(id, clientChannel);
