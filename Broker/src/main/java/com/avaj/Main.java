@@ -1,16 +1,16 @@
 package com.avaj;
 
-import com.avaj.trading.router.Router;
+import com.avaj.trading.broker.Broker;
 
 public class Main {
     public static void main(String[] args) {
-        Router router = new Router();
+        Broker broker = new Broker();
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            router.shutdown();
+            broker.shutdown();
             System.out.println("Application shutting down...");
         }));
 
-        router.start();
+        broker.start();
     }
 }

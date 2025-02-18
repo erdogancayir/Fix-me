@@ -1,44 +1,28 @@
 package com.avaj.trading.market;
 
-import java.io.*;
-import java.net.*;
-import java.util.concurrent.*;
+import java.io.IOException;
 
 public class Market {
-    private static final String ROUTER_HOST = "localhost";
-    private static final int ROUTER_PORT = 5001;
-    private static String marketId;
-    private static ExecutorService executor = Executors.newFixedThreadPool(5);
+    private String marketId;
+    private MarketSocketManager socketManager;
 
-    public static void main(String[] args) {
-        try (Socket socket = new Socket(ROUTER_HOST, ROUTER_PORT);
-             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-             PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
+    public Market() {
+        this.socketManager = new MarketSocketManager(this);
+    }
 
-            // Router'dan ID al
-            String response = in.readLine();
-            if (response.startsWith("ASSIGNED_ID:")) {
-                marketId = response.split(":")[1];
-                System.out.println("Market ID: " + marketId);
-            } else {
-                System.out.println("Failed to receive ID from Router.");
-                return;
-            }
-
-            while (true) {
-                String message = in.readLine();
-                if (message == null) continue;
-
-                executor.submit(() -> processOrder(message, out));
-            }
+    public void start() {
+        try {
+            socketManager.startConnection();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private static void processOrder(String message, PrintWriter out) {
-        System.out.println("Received: " + message);
+    public void setMarketId(String marketId) {
+        this.marketId = marketId;
+    }
 
+    public void processOrder(String message) {
         if (!ChecksumValidator.isValid(message)) {
             System.out.println("Invalid checksum! Message rejected.");
             return;
@@ -61,11 +45,16 @@ public class Market {
 
         String status = isExecuted ? "Executed" : "Rejected";
         String responseMessage = brokerId + "|" + status + "|" + instrument + "|" + quantity + "|" + market + "|" + price + "|" + generateChecksum();
-        out.println(responseMessage);
-        System.out.println("Response sent: " + responseMessage);
+
+        socketManager.sendMessage(responseMessage);
     }
 
-    private static String generateChecksum() {
+    private String generateChecksum() {
         return String.valueOf((int) (Math.random() * 10000));
+    }
+
+    public void shutdown() {
+        socketManager.shutdown();
+        System.out.println("Market shut down complete.");
     }
 }
