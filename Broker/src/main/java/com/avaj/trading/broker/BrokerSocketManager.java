@@ -9,7 +9,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class SocketManager {
+public class BrokerSocketManager {
     private static final String ROUTER_HOST = "localhost";
     private static final int ROUTER_PORT = 5000;
 
@@ -18,7 +18,7 @@ public class SocketManager {
     private ExecutorService executor = Executors.newCachedThreadPool();
     private Broker broker;
 
-    public SocketManager(Broker broker) {
+    public BrokerSocketManager(Broker broker) {
         this.broker = broker;
     }
 

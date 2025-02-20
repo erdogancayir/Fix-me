@@ -4,10 +4,10 @@ import java.util.Scanner;
 
 public class Broker {
     private String brokerId;
-    private SocketManager socketManager;
+    private BrokerSocketManager socketManager;
 
     public Broker() {
-        socketManager = new SocketManager(this);
+        socketManager = new BrokerSocketManager(this);
     }
 
     public void start() {
