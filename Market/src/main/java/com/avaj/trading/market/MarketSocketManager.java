@@ -80,6 +80,13 @@ public class MarketSocketManager {
         try {
             buffer.clear();
             int bytesRead = socketChannel.read(buffer);
+            if (bytesRead == -1) {
+                System.err.println("Router bağlantısı kesildi! Market kapatılıyor...");
+                shutdown();
+                System.exit(1);
+                return;
+            }
+
             if (bytesRead > 0) {
                 buffer.flip();
                 String message = new String(buffer.array(), 0, buffer.limit());
