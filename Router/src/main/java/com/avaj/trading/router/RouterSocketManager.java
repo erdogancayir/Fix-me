@@ -251,15 +251,27 @@ public class RouterSocketManager {
 
     public void shutdown() {
         System.out.println("Shutting down RouterSocketManager...");
+
         running = false;
-        selector.wakeup(); // runEventLoop() içindeki select()'i kırmak için
+
+        if (selector != null && selector.isOpen()) {
+            selector.wakeup();  // select() işlemini kır
+            try {
+                selector.close();   // Selector'u tamamen kapat
+            } catch (IOException e) {
+                System.err.println("Error closing selector: " + e.getMessage());
+            }
+        }
 
         cleanup();
     }
 
+
     private void cleanup() {
         try {
-            selector.close();
+            if (selector != null && selector.isOpen()) {
+                selector.close();
+            }
         } catch (IOException e) {
             System.err.println("Error closing selector: " + e.getMessage());
         }
