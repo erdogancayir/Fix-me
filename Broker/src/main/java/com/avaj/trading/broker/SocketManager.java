@@ -28,8 +28,26 @@ public class SocketManager {
         socketChannel.configureBlocking(false);
         socketChannel.connect(new InetSocketAddress(ROUTER_HOST, ROUTER_PORT));
         socketChannel.register(selector, SelectionKey.OP_CONNECT);
+        monitorConnection();
 
         executor.submit(this::eventLoop);
+    }
+
+    private void monitorConnection() {
+        executor.submit(() -> {
+            while (true) {
+                try {
+                    Thread.sleep(3000); // Her 3 saniyede bir kontrol et
+                    if (!socketChannel.isOpen()) { // Eğer bağlantı kapandıysa
+                        System.err.println("Router connection lost. Shutting down Broker...");
+                        shutdown();
+                        System.exit(1);
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        });
     }
 
     private void eventLoop() {
@@ -40,6 +58,12 @@ public class SocketManager {
                 while (keys.hasNext()) {
                     SelectionKey key = keys.next();
                     keys.remove();
+
+                    if (!key.isValid()) { // Eğer bağlantı kopmuşsa Broker'ı kapat
+                        System.err.println("Router connection lost. Exiting Broker...");
+                        shutdown();
+                        System.exit(1);
+                    }
 
                     if (key.isConnectable()) {
                         handleConnect(key);
@@ -79,6 +103,14 @@ public class SocketManager {
         try {
             buffer.clear();
             int bytesRead = socketChannel.read(buffer);
+
+            if (bytesRead == -1) { // Router bağlantısı kesildi
+                System.err.println("Router connection lost. Shutting down Broker...");
+                shutdown();
+                System.exit(1); // Programı tamamen kapat
+                return;
+            }
+
             if (bytesRead > 0) {
                 buffer.flip();
                 String response = new String(buffer.array(), 0, buffer.limit());
@@ -86,7 +118,6 @@ public class SocketManager {
             }
         } catch (IOException e) {
             System.err.println("Error reading message: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 

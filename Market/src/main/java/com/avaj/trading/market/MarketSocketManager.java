@@ -42,7 +42,7 @@ public class MarketSocketManager {
                     keys.remove();
 
                     if (key.isConnectable()) {
-                        handleConnect();
+                        handleConnect(key);
                     } else if (key.isReadable()) {
                         readMessage();
                     }
@@ -55,8 +55,10 @@ public class MarketSocketManager {
         }
     }
 
-    private void handleConnect() throws IOException {
+    private void handleConnect(SelectionKey key) throws IOException {
         if (socketChannel.finishConnect()) {
+            key.interestOps(SelectionKey.OP_READ);
+
             System.out.println("Connected to Router.");
             ByteBuffer buffer = ByteBuffer.allocate(1024);
             socketChannel.read(buffer);
@@ -81,6 +83,15 @@ public class MarketSocketManager {
             if (bytesRead > 0) {
                 buffer.flip();
                 String message = new String(buffer.array(), 0, buffer.limit());
+
+                // Eğer Market ID hala null ise ve mesaj ID'yi içeriyorsa, burada alalım
+                if (message.startsWith("ASSIGNED_ID:") && market.getMarketId() == null) {
+                    String marketId = message.split(":")[1].trim();
+                    market.setMarketId(marketId);
+                    System.out.println("Market ID set: " + marketId);
+                    return; // ID alındı, başka işlem yapma
+                }
+
                 System.out.println("Received Order: " + message);
                 executor.submit(() -> market.processOrder(message));
             }

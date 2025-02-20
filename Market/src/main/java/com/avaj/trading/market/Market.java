@@ -14,7 +14,8 @@ public class Market {
         try {
             socketManager.startConnection();
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
+            //e.printStackTrace();
         }
     }
 
@@ -22,19 +23,29 @@ public class Market {
         this.marketId = marketId;
     }
 
+    public String getMarketId() {
+        return this.marketId;
+    }
+
     public void processOrder(String message) {
+        System.out.println("Received raw order: " + message); // Log ekleyerek hata ayıklayalım
+
         if (!ChecksumValidator.isValid(message)) {
             System.out.println("Invalid checksum! Message rejected.");
             return;
         }
 
         String[] parts = message.split("\\|");
-        String brokerId = parts[0];
-        String orderType = parts[1];
-        String instrument = parts[2];
-        int quantity = Integer.parseInt(parts[3]);
-        String market = parts[4];
-        double price = Double.parseDouble(parts[5]);
+        if (parts.length < 6) { // Beklenen format: BUY/SELL|Instrument|Quantity|Market|Price|Checksum
+            System.err.println("Invalid FIX message format. Expected at least 6 parts, got: " + parts.length);
+            return;
+        }
+
+        String orderType = parts[0];
+        String instrument = parts[1];
+        int quantity = Integer.parseInt(parts[2]);
+        String market = parts[3];
+        double price = Double.parseDouble(parts[4]);
 
         boolean isExecuted = false;
         if ("BUY".equals(orderType)) {
@@ -44,7 +55,7 @@ public class Market {
         }
 
         String status = isExecuted ? "Executed" : "Rejected";
-        String responseMessage = brokerId + "|" + status + "|" + instrument + "|" + quantity + "|" + market + "|" + price + "|" + generateChecksum();
+        String responseMessage = marketId + "|" + status + "|" + instrument + "|" + quantity + "|" + market + "|" + price + "|" + generateChecksum();
 
         socketManager.sendMessage(responseMessage);
     }

@@ -13,10 +13,15 @@ public class Broker {
     public void start() {
         try {
             socketManager.startConnection();
+
+            while (brokerId == null) {
+                Thread.sleep(100);
+            }
+
             listenForUserInput();
         } catch (Exception e) {
             System.err.println("Error starting broker: " + e.getMessage());
-            e.printStackTrace();
+            //e.printStackTrace();
         }
     }
 

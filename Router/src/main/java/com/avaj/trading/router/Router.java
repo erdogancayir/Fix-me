@@ -13,22 +13,8 @@ public class Router {
         try {
             socketManager.startServers();
         } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void forwardMessage(String message) {
-        String[] parts = message.split("\\|");
-        if (parts.length < 2) {
-            System.err.println("Geçersiz mesaj formatı: " + message);
-            return;
-        }
-
-        try {
-            int targetId = Integer.parseInt(parts[0]);
-            socketManager.sendMessage(targetId, message);
-        } catch (NumberFormatException e) {
-            System.err.println("Geçersiz hedef ID: " + parts[0]);
+            System.err.println("Error starting router: " + e.getMessage());
+            //e.printStackTrace();
         }
     }
 
