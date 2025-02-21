@@ -1,12 +1,14 @@
-package com.avaj.trading.broker;
+package com.avaj;
 
 public class FixMessage {
-    private final String id;
-    private final OrderType orderType;
-    private final String instrument;
-    private final int quantity;
-    private final String market;
-    private final double price;
+    public final String id;
+    public final OrderType orderType;
+    public final String instrument;
+    public final int quantity;
+    public final String market;
+    public final double price;
+
+    public String checksum;
 
     public FixMessage(String id, OrderType orderType, String instrument, int quantity, String market, double price) {
         this.id = id;
@@ -19,7 +21,9 @@ public class FixMessage {
 
     public String generateChecksum(String message) {
         int checksum = message.chars().sum() % 10000;
-        return String.valueOf(checksum);
+        this.checksum = String.valueOf(checksum);
+
+        return this.checksum;
     }
 
     public String toFixString() {
