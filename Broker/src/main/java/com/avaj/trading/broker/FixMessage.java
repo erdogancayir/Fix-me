@@ -1,14 +1,12 @@
 package com.avaj.trading.broker;
 
-import java.util.Random;
-
 public class FixMessage {
-    private String id;
-    private OrderType orderType;
-    private String instrument;
-    private int quantity;
-    private String market;
-    private double price;
+    private final String id;
+    private final OrderType orderType;
+    private final String instrument;
+    private final int quantity;
+    private final String market;
+    private final double price;
 
     public FixMessage(String id, OrderType orderType, String instrument, int quantity, String market, double price) {
         this.id = id;

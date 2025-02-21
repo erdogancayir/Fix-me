@@ -15,8 +15,8 @@ public class BrokerSocketManager {
 
     private SocketChannel socketChannel;
     private Selector selector;
-    private ExecutorService executor = Executors.newCachedThreadPool();
-    private Broker broker;
+    private final ExecutorService executor = Executors.newCachedThreadPool();
+    private final Broker broker;
 
     public BrokerSocketManager(Broker broker) {
         this.broker = broker;
@@ -56,7 +56,6 @@ public class BrokerSocketManager {
             }
         } catch (IOException e) {
             System.err.println("Socket event loop error: " + e.getMessage());
-            //e.printStackTrace();
         }
     }
 

@@ -236,7 +236,6 @@ public class RouterSocketManager {
         }
     }
 
-
     public void shutdown() {
         System.out.println("Shutting down RouterSocketManager...");
 

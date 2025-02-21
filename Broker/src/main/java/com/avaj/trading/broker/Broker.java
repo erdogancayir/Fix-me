@@ -4,7 +4,7 @@ import java.util.Scanner;
 
 public class Broker {
     private String brokerId;
-    private BrokerSocketManager socketManager;
+    private final BrokerSocketManager socketManager;
 
     public Broker() {
         socketManager = new BrokerSocketManager(this);
@@ -21,7 +21,6 @@ public class Broker {
             listenForUserInput();
         } catch (Exception e) {
             System.err.println("Error starting broker: " + e.getMessage());
-            //e.printStackTrace();
         }
     }
 
@@ -37,7 +36,7 @@ public class Broker {
         Scanner scanner = new Scanner(System.in);
         while (true) {
             System.out.println("Enter order type (BUY/SELL), instrument, quantity, market, price:");
-            String orderTypeStr = scanner.next(); // input alana kadar bekler.
+            String orderTypeStr = scanner.next();
             String instrument = scanner.next();
             int quantity = scanner.nextInt();
             String market = scanner.next();

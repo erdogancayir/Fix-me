@@ -14,8 +14,8 @@ public class MarketSocketManager {
 
     private SocketChannel socketChannel;
     private Selector selector;
-    private ExecutorService executor = Executors.newCachedThreadPool();
-    private Market market;
+    private final ExecutorService executor = Executors.newCachedThreadPool();
+    private final Market market;
     private volatile boolean running = true;
 
     public MarketSocketManager(Market market) {
@@ -49,7 +49,7 @@ public class MarketSocketManager {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Error event loop: " + e.getMessage());
         } finally {
             shutdown();
         }
@@ -91,19 +91,18 @@ public class MarketSocketManager {
                 buffer.flip();
                 String message = new String(buffer.array(), 0, buffer.limit());
 
-                // Eğer Market ID hala null ise ve mesaj ID'yi içeriyorsa, burada alalım
                 if (message.startsWith("ASSIGNED_ID:") && market.getMarketId() == null) {
                     String marketId = message.split(":")[1].trim();
                     market.setMarketId(marketId);
                     System.out.println("Market ID set: " + marketId);
-                    return; // ID alındı, başka işlem yapma
+                    return;
                 }
 
                 System.out.println("Received Order: " + message);
                 executor.submit(() -> market.processOrder(message));
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Error: " + e.getMessage());
         }
     }
 
@@ -114,14 +113,9 @@ public class MarketSocketManager {
                 socketChannel.write(buffer);
                 System.out.println("Response Sent: " + message);
             } catch (IOException e) {
-                e.printStackTrace();
+                System.err.println("Error: " + e.getMessage());
             }
         });
-    }
-
-    public String generateChecksum(String message) {
-        int checksum = message.chars().sum() % 10000;
-        return String.valueOf(checksum);
     }
 
     public void shutdown() {

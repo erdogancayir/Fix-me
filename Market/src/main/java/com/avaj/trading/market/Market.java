@@ -4,7 +4,7 @@ import java.io.IOException;
 
 public class Market {
     private String marketId;
-    private MarketSocketManager socketManager;
+    private final MarketSocketManager socketManager;
 
     public Market() {
         this.socketManager = new MarketSocketManager(this);
@@ -15,7 +15,6 @@ public class Market {
             socketManager.startConnection();
         } catch (IOException e) {
             System.err.println(e.getMessage());
-            //e.printStackTrace();
         }
     }
 
@@ -28,7 +27,7 @@ public class Market {
     }
 
     public void processOrder(String message) {
-        System.out.println("Received raw order: " + message); // Log ekleyerek hata ayıklayalım
+        System.out.println("Received raw order: " + message);
 
         if (!ChecksumValidator.isValid(message)) {
             System.out.println("Invalid checksum! Message rejected.");
@@ -36,7 +35,7 @@ public class Market {
         }
 
         String[] parts = message.split("\\|");
-        if (parts.length < 6) { // Beklenen format: BUY/SELL|Instrument|Quantity|Market|Price|Checksum
+        if (parts.length < 6) { // Expected format: BUY/SELL|Instrument|Quantity|Market|Price|Checksum
             System.err.println("Invalid FIX message format. Expected at least 6 parts, got: " + parts.length);
             return;
         }
