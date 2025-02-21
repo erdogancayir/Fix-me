@@ -7,7 +7,6 @@ import java.nio.channels.*;
 import java.util.Iterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 public class BrokerSocketManager {
     private static final String ROUTER_HOST = "localhost";
