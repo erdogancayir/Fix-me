@@ -2,7 +2,7 @@ package com.avaj;
 
 import com.avaj.trading.broker.Broker;
 
-public class Main {
+public class BrokerMain {
     public static void main(String[] args) {
         Broker broker = new Broker();
 

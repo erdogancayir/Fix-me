@@ -1,16 +1,15 @@
 package com.avaj;
 
-import com.avaj.trading.router.Router;
-
-public class Main {
+import com.avaj.trading.market.Market;
+public class MarketMain {
     public static void main(String[] args) {
-        Router router = new Router();
+        Market market = new Market();
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            router.shutdown();
+            market.shutdown();
             System.out.println("Application shutting down...");
         }));
 
-        router.start();
+        market.start();
     }
 }

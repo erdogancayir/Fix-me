@@ -19,13 +19,15 @@ public class FixMessage {
         this.price = price;
     }
 
-    // Checksum üreten basit bir algoritma (Rastgele örnek)
-    private String generateChecksum() {
-        Random rand = new Random();
-        return String.format("%04d", rand.nextInt(10000));
+    public String generateChecksum(String message) {
+        int checksum = message.chars().sum() % 10000;
+        return String.valueOf(checksum);
     }
 
     public String toFixString() {
-        return id + "|" + orderType + "|" + instrument + "|" + quantity + "|" + market + "|" + price + "|" + generateChecksum();
+        String message = id + "|" + orderType + "|" + instrument + "|" + quantity + "|" + market + "|" + price;
+        String checksum = generateChecksum(message);
+
+        return message + "|" + checksum;
     }
 }

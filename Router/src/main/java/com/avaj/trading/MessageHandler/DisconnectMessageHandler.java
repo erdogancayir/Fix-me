@@ -22,7 +22,7 @@ public class DisconnectMessageHandler implements IMessageHandler {
                 System.err.println("Invalid disconnect message format: " + message);
             }
         } else if (next != null) {
-            next.handle(message, router); // Eğer disconnect değilse bir sonraki handler'a geçir
+            next.handle(message, router);
         }
     }
 }

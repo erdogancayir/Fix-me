@@ -81,7 +81,7 @@ public class MarketSocketManager {
             buffer.clear();
             int bytesRead = socketChannel.read(buffer);
             if (bytesRead == -1) {
-                System.err.println("Router bağlantısı kesildi! Market kapatılıyor...");
+                System.err.println("Router disconnected...");
                 shutdown();
                 System.exit(1);
                 return;
@@ -117,6 +117,11 @@ public class MarketSocketManager {
                 e.printStackTrace();
             }
         });
+    }
+
+    public String generateChecksum(String message) {
+        int checksum = message.chars().sum() % 10000;
+        return String.valueOf(checksum);
     }
 
     public void shutdown() {

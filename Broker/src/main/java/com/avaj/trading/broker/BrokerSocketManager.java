@@ -28,38 +28,20 @@ public class BrokerSocketManager {
         socketChannel.configureBlocking(false);
         socketChannel.connect(new InetSocketAddress(ROUTER_HOST, ROUTER_PORT));
         socketChannel.register(selector, SelectionKey.OP_CONNECT);
-        monitorConnection();
 
         executor.submit(this::eventLoop);
-    }
-
-    private void monitorConnection() {
-        executor.submit(() -> {
-            while (true) {
-                try {
-                    Thread.sleep(3000); // Her 3 saniyede bir kontrol et
-                    if (!socketChannel.isOpen()) { // Eğer bağlantı kapandıysa
-                        System.err.println("Router connection lost. Shutting down Broker...");
-                        shutdown();
-                        System.exit(1);
-                    }
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            }
-        });
     }
 
     private void eventLoop() {
         try {
             while (true) {
-                selector.select(); // event yok ise bekler.
+                selector.select();
                 Iterator<SelectionKey> keys = selector.selectedKeys().iterator();
                 while (keys.hasNext()) {
                     SelectionKey key = keys.next();
                     keys.remove();
 
-                    if (!key.isValid()) { // Eğer bağlantı kopmuşsa Broker'ı kapat
+                    if (!key.isValid()) {
                         System.err.println("Router connection lost. Exiting Broker...");
                         shutdown();
                         System.exit(1);
@@ -74,7 +56,7 @@ public class BrokerSocketManager {
             }
         } catch (IOException e) {
             System.err.println("Socket event loop error: " + e.getMessage());
-            e.printStackTrace();
+            //e.printStackTrace();
         }
     }
 
@@ -104,10 +86,10 @@ public class BrokerSocketManager {
             buffer.clear();
             int bytesRead = socketChannel.read(buffer);
 
-            if (bytesRead == -1) { // Router bağlantısı kesildi
+            if (bytesRead == -1) {
                 System.err.println("Router connection lost. Shutting down Broker...");
                 shutdown();
-                System.exit(1); // Programı tamamen kapat
+                System.exit(1);
                 return;
             }
 
@@ -129,27 +111,18 @@ public class BrokerSocketManager {
                 System.out.println("Sent Order: " + message);
             } catch (IOException e) {
                 System.err.println("Error sending message: " + e.getMessage());
-                e.printStackTrace();
             }
         });
     }
 
     public void shutdown() {
-        executor.shutdown();
-        try {
-            if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
-                executor.shutdownNow();
-            }
-        } catch (InterruptedException e) {
-            executor.shutdownNow();
-            Thread.currentThread().interrupt();
-        }
-
         try {
             socketChannel.close();
             selector.close();
         } catch (IOException e) {
             System.err.println("Error shutting down SocketManager: " + e.getMessage());
         }
+
+        executor.shutdown();
     }
 }

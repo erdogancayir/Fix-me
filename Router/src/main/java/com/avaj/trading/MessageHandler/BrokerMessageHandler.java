@@ -16,7 +16,7 @@ public class BrokerMessageHandler implements IMessageHandler {
         String[] parts = message.split("\\|");
 
         if (parts.length < 2) {
-            System.err.println("Geçersiz mesaj formatı: " + message);
+            System.err.println("Invalid message format: " + message);
             return;
         }
 
@@ -34,7 +34,7 @@ public class BrokerMessageHandler implements IMessageHandler {
                 next.handle(message, router);
             }
         } catch (NumberFormatException e) {
-            System.err.println("Geçersiz Broker ID formatı: " + message);
+            System.err.println("Invalid Broker ID format: " + message);
         }
     }
 }

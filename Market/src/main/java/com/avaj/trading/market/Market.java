@@ -55,13 +55,16 @@ public class Market {
         }
 
         String status = isExecuted ? "Executed" : "Rejected";
-        String responseMessage = marketId + "|" + status + "|" + instrument + "|" + quantity + "|" + market + "|" + price + "|" + generateChecksum();
+        String responseMessage = marketId + "|" + status + "|" + instrument + "|" + quantity + "|" + market + "|" + price;
+        String checksum = generateChecksum(responseMessage);
+        String finalMessage = responseMessage + "|" + checksum;
 
-        socketManager.sendMessage(responseMessage);
+        socketManager.sendMessage(finalMessage);
     }
 
-    private String generateChecksum() {
-        return String.valueOf((int) (Math.random() * 10000));
+    public String generateChecksum(String message) {
+        int checksum = message.chars().sum() % 10000;
+        return String.valueOf(checksum);
     }
 
     public void shutdown() {

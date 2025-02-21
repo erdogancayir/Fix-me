@@ -99,7 +99,6 @@ public class RouterSocketManager {
         try {
             int bytesRead = clientChannel.read(buffer);
 
-            // Eğer bağlantı kapandıysa, doğrudan DISCONNECT mesajı üret ve handler'a gönder
             if (bytesRead == -1) {
                 int disconnectedId = findClientId(clientChannel);
                 if (disconnectedId != -1) {
@@ -108,7 +107,6 @@ public class RouterSocketManager {
                 return;
             }
 
-            // Eğer veri gelmediyse, işlemi durdur
             if (bytesRead == 0) {
                 return;
             }
@@ -120,13 +118,11 @@ public class RouterSocketManager {
 
             System.out.println("Received: " + message);
 
-            // Checksum doğrulaması
             if (!ChecksumValidator.isValid(message)) {
                 System.err.println("Invalid checksum! Message rejected.");
                 return;
             }
 
-            // Mesajı handler zincirine gönder
             forwardMessage(message);
         } catch (IOException e) {
             System.err.println("Error reading message: " + e.getMessage());
@@ -140,44 +136,39 @@ public class RouterSocketManager {
     public void forwardMessage(String message) {
         String[] parts = message.split("\\|");
         if (parts.length < 2) {
-            System.err.println("Geçersiz mesaj formatı: " + message);
+            System.err.println("Invalid message format: " + message);
             return;
         }
 
         try {
-            int senderId = Integer.parseInt(parts[0]); // Mesaj gönderen ID
+            int senderId = Integer.parseInt(parts[0]); // sent id
 
             if (brokerConnections.containsKey(senderId)) {
-                // Broker’dan gelen mesaj
                 int marketId = brokerMarketMap.getOrDefault(senderId, findAvailableMarket());
                 if (marketId == -1) {
                     System.err.println("No available market for order: " + message);
                     return;
                 }
 
-                // Broker ID ile Market’i eşle
                 brokerMarketMap.put(senderId, marketId);
 
-                // Broker mesajını Market’e yönlendir
                 String updatedMessage = message.substring(parts[0].length() + 1); // Broker ID kaldırıldı
                 sendMessage(marketId, updatedMessage);
             }
             else if (marketConnections.containsKey(senderId)) {
-                // Market’ten gelen mesaj
                 int brokerId = getBrokerByMarket(senderId);
                 if (brokerId == -1) {
                     System.err.println("No broker found for market response: " + message);
                     return;
                 }
 
-                // Market mesajını Broker’a yönlendir
                 sendMessage(brokerId, message);
             }
             else {
                 System.err.println("Unknown sender ID: " + senderId);
             }
         } catch (NumberFormatException e) {
-            System.err.println("Geçersiz ID formatı: " + parts[0]);
+            System.err.println("Invalid ID format: " + parts[0]);
         }
     }
 
@@ -199,7 +190,7 @@ public class RouterSocketManager {
     private int findAvailableMarket() {
         return marketConnections.keySet()
                 .stream()
-                .findAny() // rastgele bir Market seçelim
+                .findAny() // Let's choose a random market
                 .orElse(-1);
     }
 
@@ -225,12 +216,10 @@ public class RouterSocketManager {
                 System.err.println("Failed to close connection: " + e.getMessage());
             }
 
-            // Broker-Market eşleşmesini temizle
             brokerMarketMap.entrySet().removeIf(entry -> entry.getValue().equals(disconnectedId));
 
-            System.out.println("Bağlantı kapandı: " + disconnectedId);
+            System.out.println("Connection closed: " + disconnectedId);
 
-            // Bağlantı kesildiğini diğer istemcilere bildir
             String disconnectMessage = "DISCONNECT|" + disconnectedId;
             brokerConnections.values().forEach(socket -> sendMessageToSocket(socket, disconnectMessage));
             marketConnections.values().forEach(socket -> sendMessageToSocket(socket, disconnectMessage));
@@ -239,7 +228,6 @@ public class RouterSocketManager {
         }
     }
 
-    // Yardımcı metod: Socket'e mesaj gönderme
     private void sendMessageToSocket(SocketChannel socket, String message) {
         try {
             socket.write(ByteBuffer.wrap(message.getBytes()));
@@ -255,9 +243,9 @@ public class RouterSocketManager {
         running = false;
 
         if (selector != null && selector.isOpen()) {
-            selector.wakeup();  // select() işlemini kır
+            selector.wakeup();
             try {
-                selector.close();   // Selector'u tamamen kapat
+                selector.close();
             } catch (IOException e) {
                 System.err.println("Error closing selector: " + e.getMessage());
             }
@@ -304,20 +292,17 @@ public class RouterSocketManager {
                 return entry.getKey();
             }
         }
-        return -1; // Eğer ID bulunamazsa
+        return -1;
     }
 
-    // Broker olup olmadığını kontrol eden yardımcı metod
     public boolean isBroker(int id) {
         return brokerConnections.containsKey(id);
     }
 
-    // Market olup olmadığını kontrol eden yardımcı metod
     public boolean isMarket(int id) {
         return marketConnections.containsKey(id);
     }
 
-    // Broker için uygun Market’i bulur
     public int getMarketForBroker(int brokerId) {
         return brokerMarketMap.getOrDefault(brokerId, findAvailableMarket());
     }
