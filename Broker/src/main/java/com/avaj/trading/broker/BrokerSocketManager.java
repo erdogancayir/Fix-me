@@ -1,7 +1,6 @@
 package com.avaj.trading.broker;
 
 import com.avaj.BrokerDatabaseManager;
-import com.avaj.FixMessage;
 
 import java.util.*;
 import java.io.IOException;
@@ -130,11 +129,11 @@ public class BrokerSocketManager {
     }
 
     private void recoverPendingTransactions() {
-        List<FixMessage> pendingOrders = brokerDatabaseManager.getPendingTransactions();
-        for (FixMessage order : pendingOrders) {
-            System.out.println("Recovering Pending Order: " + order.toFixString());
-            sendMessage(order);
-        }
+//        List<FixMessage> pendingOrders = brokerDatabaseManager.getPendingTransactions();
+//        for (FixMessage order : pendingOrders) {
+//            System.out.println("Recovering Pending Order: " + order.toFixString());
+//            sendMessage(order);
+//        }
     }
 
     public void shutdown() {

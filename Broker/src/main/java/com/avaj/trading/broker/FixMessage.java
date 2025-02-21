@@ -1,4 +1,4 @@
-package com.avaj;
+package com.avaj.trading.broker;
 
 public class FixMessage {
     public final String id;
