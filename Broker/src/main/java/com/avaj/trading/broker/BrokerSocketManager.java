@@ -1,5 +1,9 @@
 package com.avaj.trading.broker;
 
+import com.avaj.BrokerDatabaseManager;
+import com.avaj.FixMessage;
+
+import java.util.*;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -16,9 +20,11 @@ public class BrokerSocketManager {
     private Selector selector;
     private final ExecutorService executor = Executors.newCachedThreadPool();
     private final Broker broker;
+    private final BrokerDatabaseManager brokerDatabaseManager;
 
     public BrokerSocketManager(Broker broker) {
         this.broker = broker;
+        this.brokerDatabaseManager = new BrokerDatabaseManager();
     }
 
     public void startConnection() throws IOException {
@@ -101,16 +107,34 @@ public class BrokerSocketManager {
         }
     }
 
-    public void sendMessage(String message) {
+    public void sendMessage(FixMessage order) {
         executor.submit(() -> {
+            String message = order.toFixString();
             try {
                 ByteBuffer buffer = ByteBuffer.wrap(message.getBytes());
                 socketChannel.write(buffer);
                 System.out.println("Sent Order: " + message);
+
+                brokerDatabaseManager.insertTransaction(
+                        order.orderType.toString(),
+                        order.instrument,
+                        order.quantity,
+                        order.market,
+                        order.price,
+                        order.checksum);
+
             } catch (IOException e) {
                 System.err.println("Error sending message: " + e.getMessage());
             }
         });
+    }
+
+    private void recoverPendingTransactions() {
+        List<FixMessage> pendingOrders = brokerDatabaseManager.getPendingTransactions();
+        for (FixMessage order : pendingOrders) {
+            System.out.println("Recovering Pending Order: " + order.toFixString());
+            sendMessage(order);
+        }
     }
 
     public void shutdown() {
