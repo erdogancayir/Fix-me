@@ -12,7 +12,6 @@
         <module>Router</module>
         <module>Broker</module>
         <module>Market</module>
-        <module>Common</module>
         <module>Shared</module>
     </modules>
 

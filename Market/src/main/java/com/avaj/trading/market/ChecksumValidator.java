@@ -3,6 +3,6 @@ package com.avaj.trading.market;
 public class ChecksumValidator {
     public static boolean isValid(String message) {
         String[] parts = message.split("\\|");
-        return parts.length == 6;
+        return parts.length == 7;
     }
 }

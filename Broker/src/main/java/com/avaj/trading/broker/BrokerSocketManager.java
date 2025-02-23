@@ -1,13 +1,13 @@
 package com.avaj.trading.broker;
 
-import com.avaj.BrokerDatabaseManager;
+import database.BrokerDatabaseManager;
 
-import java.util.*;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -27,6 +27,8 @@ public class BrokerSocketManager {
     }
 
     public void startConnection() throws IOException {
+        recoverPendingTransactions();
+
         selector = Selector.open();
         socketChannel = SocketChannel.open();
         socketChannel.configureBlocking(false);
@@ -106,34 +108,29 @@ public class BrokerSocketManager {
         }
     }
 
-    public void sendMessage(FixMessage order) {
+    public void sendMessage(String message) {
         executor.submit(() -> {
-            String message = order.toFixString();
             try {
                 ByteBuffer buffer = ByteBuffer.wrap(message.getBytes());
                 socketChannel.write(buffer);
                 System.out.println("Sent Order: " + message);
-
-                brokerDatabaseManager.insertTransaction(
-                        order.orderType.toString(),
-                        order.instrument,
-                        order.quantity,
-                        order.market,
-                        order.price,
-                        order.checksum);
-
             } catch (IOException e) {
                 System.err.println("Error sending message: " + e.getMessage());
             }
         });
     }
 
+    public void insertTransaction(String message) {
+        brokerDatabaseManager.brokerInsertTransaction(message);
+    }
+
     private void recoverPendingTransactions() {
-//        List<FixMessage> pendingOrders = brokerDatabaseManager.getPendingTransactions();
-//        for (FixMessage order : pendingOrders) {
-//            System.out.println("Recovering Pending Order: " + order.toFixString());
-//            sendMessage(order);
-//        }
+        List<String> pendingOrders = brokerDatabaseManager.getPendingTransactions();
+        for (String order : pendingOrders) {
+            System.out.println("Recovering Pending Order: " + order);
+            sendMessage(order);
+            insertTransaction(order);
+        }
     }
 
     public void shutdown() {

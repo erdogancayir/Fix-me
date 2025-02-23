@@ -49,7 +49,8 @@ public class Broker {
             }
 
             FixMessage order = new FixMessage(brokerId, orderType, instrument, quantity, market, price);
-            socketManager.sendMessage(order);
+            socketManager.sendMessage(order.toFixString());
+            socketManager.insertTransaction(order.toFixString());
         }
     }
 

@@ -1,10 +1,13 @@
 package com.avaj.trading.market;
 
+import database.MarketDatabaseManager;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -17,12 +20,16 @@ public class MarketSocketManager {
     private final ExecutorService executor = Executors.newCachedThreadPool();
     private final Market market;
     private volatile boolean running = true;
+    private final MarketDatabaseManager marketDataBaseManager;
 
     public MarketSocketManager(Market market) {
         this.market = market;
+        marketDataBaseManager = new MarketDatabaseManager();
     }
 
     public void startConnection() throws IOException {
+        recoverProcessingTransactions();
+
         selector = Selector.open();
         socketChannel = SocketChannel.open();
         socketChannel.configureBlocking(false);
@@ -91,6 +98,8 @@ public class MarketSocketManager {
                 buffer.flip();
                 String message = new String(buffer.array(), 0, buffer.limit());
 
+                marketDataBaseManager.markAsProcessing(message);
+
                 if (message.startsWith("ASSIGNED_ID:") && market.getMarketId() == null) {
                     String marketId = message.split(":")[1].trim();
                     market.setMarketId(marketId);
@@ -99,7 +108,10 @@ public class MarketSocketManager {
                 }
 
                 System.out.println("Received Order: " + message);
-                executor.submit(() -> market.processOrder(message));
+               // if (market.processOrder(message))
+                   // marketDataBaseManager.markAsCompleted(message);
+                //else
+                  //  marketDataBaseManager.markAsNotFixFormat(message);
             }
         } catch (IOException e) {
             System.err.println("Error: " + e.getMessage());
@@ -116,6 +128,17 @@ public class MarketSocketManager {
                 System.err.println("Error: " + e.getMessage());
             }
         });
+    }
+
+    private void recoverProcessingTransactions() {
+        List<String> orders = marketDataBaseManager.getProcessingTransactions();
+        for (String order : orders) {
+            System.out.println("Recovering Processing Order: " + order);
+            if (market.processOrder(order))
+                marketDataBaseManager.markAsCompleted(order);
+            else
+                marketDataBaseManager.markAsNotFixFormat(order);
+        }
     }
 
     public void shutdown() {

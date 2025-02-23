@@ -152,8 +152,8 @@ public class RouterSocketManager {
 
                 brokerMarketMap.put(senderId, marketId);
 
-                String updatedMessage = message.substring(parts[0].length() + 1); // Broker ID kaldırıldı
-                sendMessage(marketId, updatedMessage);
+                //String updatedMessage = message.substring(parts[0].length() + 1); // Broker ID kaldırıldı
+                sendMessage(marketId, message);
             }
             else if (marketConnections.containsKey(senderId)) {
                 int brokerId = getBrokerByMarket(senderId);

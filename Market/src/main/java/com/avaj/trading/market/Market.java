@@ -26,18 +26,18 @@ public class Market {
         return this.marketId;
     }
 
-    public void processOrder(String message) {
+    public boolean processOrder(String message) {
         System.out.println("Received raw order: " + message);
 
         if (!ChecksumValidator.isValid(message)) {
             System.out.println("Invalid checksum! Message rejected.");
-            return;
+            return false;
         }
 
         String[] parts = message.split("\\|");
         if (parts.length < 6) { // Expected format: BUY/SELL|Instrument|Quantity|Market|Price|Checksum
             System.err.println("Invalid FIX message format. Expected at least 6 parts, got: " + parts.length);
-            return;
+            return false;
         }
 
         String orderType = parts[0];
@@ -59,6 +59,8 @@ public class Market {
         String finalMessage = responseMessage + "|" + checksum;
 
         socketManager.sendMessage(finalMessage);
+
+        return true;
     }
 
     public String generateChecksum(String message) {
