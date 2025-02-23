@@ -108,10 +108,10 @@ public class MarketSocketManager {
                 }
 
                 System.out.println("Received Order: " + message);
-               // if (market.processOrder(message))
-                   // marketDataBaseManager.markAsCompleted(message);
-                //else
-                  //  marketDataBaseManager.markAsNotFixFormat(message);
+                if (market.processOrder(message))
+                    marketDataBaseManager.markAsCompleted(message);
+                else
+                    marketDataBaseManager.markAsNotFixFormat(message);
             }
         } catch (IOException e) {
             System.err.println("Error: " + e.getMessage());

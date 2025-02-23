@@ -40,11 +40,11 @@ public class Market {
             return false;
         }
 
-        String orderType = parts[0];
-        String instrument = parts[1];
-        int quantity = Integer.parseInt(parts[2]);
-        String market = parts[3];
-        double price = Double.parseDouble(parts[4]);
+        String orderType = parts[1];
+        String instrument = parts[2];
+        int quantity = Integer.parseInt(parts[3]);
+        String market = parts[4];
+        double price = Double.parseDouble(parts[5]);
 
         boolean isExecuted = false;
         if ("BUY".equals(orderType)) {
