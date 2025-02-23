@@ -42,7 +42,7 @@ Our trading system follows a simplified **FIX protocol** to structure messages s
 - **Multi-threading & Concurrency**
 - **Maven for Dependency Management**
 - **FIX Protocol** for financial message exchange
-
+- **SqLite** for financial message exchange
 ---
 
 ## 🔥 FIX Protocol Implementation
