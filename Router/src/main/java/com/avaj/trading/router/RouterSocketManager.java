@@ -205,6 +205,7 @@ public class RouterSocketManager {
 
     public void cleanupConnection(int disconnectedId) {
         SocketChannel clientChannel = brokerConnections.remove(disconnectedId);
+
         if (clientChannel == null) {
             clientChannel = marketConnections.remove(disconnectedId);
         }
@@ -216,10 +217,24 @@ public class RouterSocketManager {
                 System.err.println("Failed to close connection: " + e.getMessage());
             }
 
-            brokerMarketMap.entrySet().removeIf(entry -> entry.getValue().equals(disconnectedId));
+            // 📌 Eğer bağlantı kopan broker ise, routing table'dan temizleyelim
+            if (brokerMarketMap.containsKey(disconnectedId)) {
+                int marketId = brokerMarketMap.remove(disconnectedId);
+                System.out.println("📌 Broker " + disconnectedId + " disconnected. Unmapped from Market " + marketId);
+            }
 
-            System.out.println("Connection closed: " + disconnectedId);
+            // 📌 Eğer bağlantı kopan market ise, bağlı brokerları kontrol edelim
+            brokerMarketMap.entrySet().removeIf(entry -> {
+                if (entry.getValue().equals(disconnectedId)) {
+                    System.out.println("📌 Market " + disconnectedId + " disconnected. Unmapping Broker " + entry.getKey());
+                    return true;
+                }
+                return false;
+            });
 
+            System.out.println("✅ Connection closed: " + disconnectedId);
+
+            // 📌 Diğer istemcilere bağlantının kesildiğini bildir
             String disconnectMessage = "DISCONNECT|" + disconnectedId;
             brokerConnections.values().forEach(socket -> sendMessageToSocket(socket, disconnectMessage));
             marketConnections.values().forEach(socket -> sendMessageToSocket(socket, disconnectMessage));

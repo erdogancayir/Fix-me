@@ -1,5 +1,6 @@
 package com.avaj.trading.broker;
 
+import java.util.InputMismatchException;
 import java.util.Scanner;
 
 public class Broker {
@@ -35,22 +36,66 @@ public class Broker {
     private void listenForUserInput() {
         Scanner scanner = new Scanner(System.in);
         while (true) {
-            System.out.println("Enter order type (BUY/SELL), instrument, quantity, market, price:");
-            String orderTypeStr = scanner.next();
-            String instrument = scanner.next();
-            int quantity = scanner.nextInt();
-            String market = scanner.next();
-            double price = scanner.nextDouble();
+            try {
+                System.out.println("\n📌 Enter order type (BUY/SELL), instrument, quantity, market, price:");
 
-            OrderType orderType = parseOrderType(orderTypeStr);
-            if (orderType == null) {
-                System.out.println("Invalid order type! Use BUY or SELL.");
-                continue;
+                String orderTypeStr = getValidString(scanner, "Order Type (BUY/SELL)");
+                OrderType orderType = parseOrderType(orderTypeStr);
+                if (orderType == null) {
+                    System.err.println("❌ Invalid order type! Use BUY or SELL.");
+                    continue;
+                }
+
+                String instrument = getValidString(scanner, "Instrument");
+                int quantity = getValidInt(scanner, "Quantity");
+                String market = getValidString(scanner, "Market");
+                double price = getValidDouble(scanner, "Price");
+
+                FixMessage order = new FixMessage(brokerId, orderType, instrument, quantity, market, price);
+                socketManager.sendMessage(order.toFixString());
+                socketManager.insertTransaction(order.toFixString());
+
+                System.out.println("✅ Order Sent: " + order.toFixString());
+
+            } catch (Exception e) {
+                System.err.println("❌ Unexpected error: " + e.getMessage());
+                scanner.nextLine();
             }
+        }
+    }
 
-            FixMessage order = new FixMessage(brokerId, orderType, instrument, quantity, market, price);
-            socketManager.sendMessage(order.toFixString());
-            socketManager.insertTransaction(order.toFixString());
+    private String getValidString(Scanner scanner, String fieldName) {
+        while (true) {
+            System.out.print("🔹 " + fieldName + ": ");
+            String input = scanner.next().trim();
+            if (!input.isEmpty()) {
+                return input;
+            }
+            System.err.println("❌ " + fieldName + " cannot be empty. Try again.");
+        }
+    }
+
+    private int getValidInt(Scanner scanner, String fieldName) {
+        while (true) {
+            System.out.print("🔹 " + fieldName + ": ");
+            try {
+                return scanner.nextInt();
+            } catch (InputMismatchException e) {
+                System.err.println("❌ Invalid number! Please enter a valid integer.");
+                scanner.nextLine();
+            }
+        }
+    }
+
+    private double getValidDouble(Scanner scanner, String fieldName) {
+        while (true) {
+            System.out.print("🔹 " + fieldName + ": ");
+            try {
+                return scanner.nextDouble();
+            } catch (InputMismatchException e) {
+                System.err.println("❌ Invalid number! Please enter a valid decimal value.");
+                scanner.nextLine();
+            }
         }
     }
 
