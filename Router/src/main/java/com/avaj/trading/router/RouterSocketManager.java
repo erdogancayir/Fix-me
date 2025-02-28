@@ -44,6 +44,11 @@ public class RouterSocketManager {
     private void runEventLoop() {
         while (running) {
             try {
+                if (selector == null || !selector.isOpen()) {
+                    System.out.println("Selector closed, exiting event loop...");
+                    break;
+                }
+
                 selector.select();
                 Iterator<SelectionKey> keys = selector.selectedKeys().iterator();
                 while (keys.hasNext()) {
